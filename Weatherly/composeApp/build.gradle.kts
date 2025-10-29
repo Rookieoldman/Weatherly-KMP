@@ -6,14 +6,11 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_23)
-        }
-    }
+    androidTarget()
     
     listOf(
         iosArm64(),
@@ -29,6 +26,10 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.okhttp)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -39,9 +40,17 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            // Coroutines + Ktor (desde version catalog)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.bundles.ktor.common)
+            // (opcional) serialization core
+            implementation(libs.kotlinx.serialization.core)
         }
         commonTest.dependencies {
-            implementation(libs.kotlin.test)
+            implementation(libs.kotlin.test)              // kotlin.test assertions multiplataforma
+            implementation(libs.kotlinx.coroutines.test)  // runTest, TestScope, etc.
+            implementation(libs.bundles.ktor.test)        // MockEngine + JSON en tests
         }
     }
 }
