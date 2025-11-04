@@ -6,11 +6,12 @@ import org.oriolestero.project.data.network.Http
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.URLBuilder
+import org.oriolestero.project.data.model.WeatherResponse
 
-class WeatherRepository(
+class WeatherRepository (
     private val client: io.ktor.client.HttpClient = Http.client
-) {
-    suspend fun geocode(city: String): Geo? {
+) : WeatherDataSource {
+    override suspend fun geocode(city: String): Geo? {
         val url = URLBuilder("https://geocoding-api.open-meteo.com/v1/search").apply {
             parameters.append("name", city)
             parameters.append("count", "1") // solo queremos el 1º
@@ -19,4 +20,19 @@ class WeatherRepository(
         val res: GeoResult = client.get(url).body()
         return res.results.firstOrNull()
     }
+    override suspend fun currentWeather(lat: Double, lon: Double): WeatherResponse {
+        val url = URLBuilder("https://api.open-meteo.com/v1/forecast").apply {
+            parameters.append("latitude", lat.toString())
+            parameters.append("longitude", lon.toString())
+            parameters.append("current", "temperature_2m,wind_speed_10m")
+            // opcional: parameters.append("timezone", "auto")
+        }.buildString()
+
+        return client.get(url).body()
+    }
+}
+
+interface WeatherDataSource {
+    suspend fun geocode(city: String): Geo?
+    suspend fun currentWeather(lat: Double, lon: Double): WeatherResponse
 }
